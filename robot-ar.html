@@ -44,7 +44,7 @@
 </head>
 <body>
   <div id="app"></div>
-  <a id="backto" href="index.html">← Kocka jedál</a>
+  <a id="backto" href="https://najxosk.github.io/kocka-jedal/">← Kocka jedál</a>
   <div id="overlay">
     <div id="hint">Otvoriť AR — nasmeruj telefón na stôl 🎲</div>
     <div id="btnOverlay">
@@ -232,10 +232,11 @@ function init(){
   scene.add(new THREE.HemisphereLight(0xffffff,0xbbbbbb,0.9));
   const l=new THREE.DirectionalLight(0xffffff,0.6); l.position.set(1,2,1); scene.add(l);
 
-  renderer=new THREE.WebGLRenderer({antialias:true, alpha:true});
+  renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
   renderer.setPixelRatio(Math.min(devicePixelRatio,2));
   renderer.setSize(innerWidth,innerHeight);
   renderer.xr.enabled=true;
+  renderer.xr.setReferenceSpaceType('local-floor');
   document.getElementById('app').appendChild(renderer.domElement);
 
   // reticle - krúžok na stole
@@ -271,33 +272,36 @@ function onRender(t,frame){
 }
 function onSelect(){
   if(!placed && reticle && reticle.visible){
-    const p=new THREE.Vector3();
-    reticle.getWorldPosition(p);
+    const p = new THREE.Vector3().setFromMatrixPosition(reticle.matrix);
     placeCubeAt(p);
   }
 }
 
 function updateHitTest(frame){
-  const session=renderer.xr.getSession();
-  if(!session) return;
-  if(!hitTestSourceRequested){
-    hitTestSourceRequested=true;
-    session.requestReferenceSpace('viewer').then(space=>{
-      referenceSpace=space;
-      return session.requestHitTestSource({space});
-    }).then(src=>{ hitTestSource=src; }).catch(()=>{});
-    return;
-  }
-  if(hitTestSource && reticle){
-    const results=frame.getHitTestResults(hitTestSource);
-    if(results.length){
-      const pose=results[0].getPose(referenceSpace);
-      if(pose){
-        reticle.visible=true;
-        reticle.position.set(pose.transform.position.x,pose.transform.position.y,pose.transform.position.z);
-        reticle.quaternion.set(pose.transform.orientation.x,pose.transform.orientation.y,pose.transform.orientation.z,pose.transform.orientation.w);
+  if(renderer.xr.isPresenting){
+    const session = renderer.xr.getSession();
+    if(!session) return;
+    if(!hitTestSourceRequested){
+      hitTestSourceRequested = true;
+      session.requestReferenceSpace('viewer').then(space=>{
+        return session.requestHitTestSource({space});
+      }).then(src=>{ hitTestSource = src; }).catch(()=>{});
+      return;
+    }
+    if(hitTestSource && reticle){
+      const results = frame.getHitTestResults(hitTestSource);
+      const refSpace = renderer.xr.getReferenceSpace();
+      if(results.length){
+        const hit = results[0];
+        const pose = hit.getPose(refSpace);
+        if(pose){
+          reticle.visible = true;
+          reticle.matrix.fromArray(pose.transform.matrix);
+        }
+      } else {
+        reticle.visible = false;
       }
-    } else reticle.visible=false;
+    }
   }
 }
 
