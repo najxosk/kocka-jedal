@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0e1a">
+<title>🎲 Kocka Robot (AR)</title>
+<style>
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; overflow:hidden; margin:0; }
+  body {
+    background:#0b0e1a; color:#fff;
+    font-family:'Segoe UI',system-ui,sans-serif;
+    touch-action:none;
+  }
+  #app { position:fixed; inset:0; }
+  #app canvas { display:block; width:100%; height:100%; }
+  #overlay {
+    position:fixed; inset:0; pointer-events:none;
+    display:flex; flex-direction:column;
+    justify-content:flex-end; align-items:center;
+    padding:0 20px calc(env(safe-area-inset-bottom,0px) + 24px);
+  }
+  #btnOverlay { position:absolute; bottom:0; left:0; right:0; text-align:center; padding-bottom:calc(env(safe-area-inset-bottom,0px) + 16px); pointer-events:none; }
+  .btn {
+    pointer-events:auto; cursor:pointer;
+    border:0; border-radius:999px;
+    padding:16px 26px; font-size:18px; font-weight:800;
+    color:#fff; background:linear-gradient(135deg,#ff7e5f,#ffb45e);
+    box-shadow:0 10px 30px rgba(0,0,0,.5);
+    font-family:inherit;
+  }
+  #hint {
+    pointer-events:none; text-align:center; font-size:14px;
+    color:#ffe0c0; background:rgba(0,0,0,.45);
+    border-radius:12px; padding:8px 14px; margin-bottom:10px;
+  }
+  #hint b { color:#ffcf8f; }
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="overlay">
+    <div id="hint">Otvoriť AR — nasmeruj telefón na stôl 🎲</div>
+    <div id="btnOverlay">
+      <button class="btn hidden" id="btnEnter">🔮 Spustiť AR</button>
+      <button class="btn hidden" id="btnPremena">🤖 Premena na robota</button>
+      <button class="btn hidden" id="btnZnova">🔄 Znova hodiť</button>
+    </div>
+  </div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { ARButton } from 'three/addons/webxr/ARButton.js';
+
+const btnEnter   = document.getElementById('btnEnter');
+const btnPremena = document.getElementById('btnPremena');
+const btnZnova   = document.getElementById('btnZnova');
+const hint       = document.getElementById('hint');
+
+let scene, camera, renderer, controller;
+let reticle = null;
+let hitTestSource = null, hitTestSourceRequested = false;
+let referenceSpace = null;
+
+let cube = null;
+let robot = null;
+let pieces = [];
+let placed = false, transforming = false;
+let robotBaseY = 0;
+const eyes = [];
+
+const S = 0.055; // veľkosť jedného voxela
+
+// cieľové pozície robotích častí (voči bodu na stole)
+const ROBOT_PARTS = [
+  { x:0.000, z:0.000, y:0.200 },  // hlava
+  { x:0.000, z:0.000, y:0.115 },  // telo
+  { x:-0.075, z:0.000, y:0.135 }, // ruka L
+  { x: 0.075, z:0.000, y:0.135 }, // ruka P
+  { x:-0.028, z:0.000, y:0.045 }, // noha L
+  { x: 0.028, z:0.000, y:0.045 }, // noha P
+  { x:-0.020, z:0.000, y:0.248 }, // anténa L
+  { x: 0.020, z:0.000, y:0.248 }, // anténa P
+];
+
+function setHint(html){ hint.innerHTML = html; }
+function show(ids){
+  [btnEnter,btnPremena,btnZnova].forEach(b=>b.classList.add('hidden'));
+  ids.forEach(id=>id.classList.remove('hidden'));
+}
+function easeOut(x){ return 1-Math.pow(1-x,3); }
+
+function makeVoxel(color){
+  const m = new THREE.Mesh(
+    new THREE.BoxGeometry(S,S,S),
+    new THREE.MeshStandardMaterial({color, roughness:.5, metalness:.1})
+  );
+  m.castShadow = true;
+  return m;
+}
+
+// 8 voxelov kocky rozložených okolo stredu
+function makeCubePieces(){
+  const colors=[0xffb45e,0xff7e5f,0x5f7fff,0x8f5fff,0x3fd0ff,0x7dff8f,0xffe05f,0xff5f8f];
+  const off=S/2;
+  const offs=[
+    [-off,-off,-off],[ off,-off,-off],[-off, off,-off],[ off, off,-off],
+    [-off,-off, off],[ off,-off, off],[-off, off, off],[ off, off, off]
+  ];
+  return offs.map(function(o,i){
+    var v=makeVoxel(colors[i%colors.length]);
+    v.position.set(o[0],o[1],o[2]);
+    return { mesh:v, home:new THREE.Vector3(o[0],o[1],o[2]) };
+  });
+}
+
+// hodenie kocky na miesto (drobný prepad zhora)
+function placeCubeAt(posWorld){
+  cube = new THREE.Group();
+  cube.position.copy(posWorld);
+  cube.position.y += S/2;
+  const tmp = makeCubePieces();
+  tmp.forEach(t=>{ cube.add(t.mesh); pieces.push({mesh:t.mesh, home:t.home, target:null}); });
+  scene.add(cube);
+  animDrop(cube, cube.position.y);
+  placed = true;
+  if(reticle) reticle.visible = false;
+  show(['btnPremena']);
+  setHint('🏠 Kocka dopadla na stôl. Stlač <b>🤖 Premena na robota</b>.');
+}
+function animDrop(g, landY){
+  const startY = g.position.y;
+  const t0 = performance.now(); const dur=550;
+  function step(t){
+    const p=Math.min(1,(t-t0)/dur);
+    g.position.y = startY + (landY-startY)*(p*p);
+    if(p<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// rozbitie + poskladanie do robota
+function transformToRobot(){
+  if(transforming) return;
+  transforming = true;
+  btnPremena.disabled = true;
+
+  robot = new THREE.Group();
+  robot.position.copy(cube.position);
+  robotBaseY = cube.position.y;
+  if(camera){
+    const d=new THREE.Vector3().subVectors(camera.position, robot.position);
+    d.y=0;
+    if(d.lengthSq()>0.0001) robot.rotation.y = Math.atan2(d.x,d.z);
+  }
+  scene.add(robot);
+
+  pieces.forEach(pc=>{ cube.remove(pc.mesh); robot.add(pc.mesh); });
+  scene.remove(cube); cube=null;
+
+  // fáza 1: rozlet von
+  pieces.forEach(pc=>{
+    const dir=pc.home.clone().normalize();
+    pc.target = pc.home.clone().add(dir.multiplyScalar(S*2.2));
+    pc.phase='boom'; pc.start=performance.now();
+    pc.boomFrom = pc.mesh.position.clone();
+  });
+  const tBoom=performance.now();
+  function boomEnd(){
+    if(performance.now()-tBoom<450){ requestAnimationFrame(boomEnd); return; }
+    pieces.forEach((pc,i)=>{
+      const part=ROBOT_PARTS[i];
+      pc.target=new THREE.Vector3(part.x,part.y,part.z);
+      pc.phase='assemble'; pc.start=performance.now();
+    });
+    const tAs=performance.now();
+    function assembleEnd(){
+      if(performance.now()-tAs<650){ requestAnimationFrame(assembleEnd); return; }
+      assemblingFinished();
+    }
+    requestAnimationFrame(assembleEnd);
+  }
+  requestAnimationFrame(boomEnd);
+}
+
+function assemblingFinished(){
+  addEyes();
+  transforming=false;
+  show(['btnZnova']);
+  setHint('🤖 Robot je tu! Stavia sa. Stlač <b>🔄 Znova hodiť</b> ak chceš začať odznova.');
+  btnPremena.disabled=false;
+}
+function addEyes(){
+  if(!robot) return;
+  const eyeMat=new THREE.MeshStandardMaterial({color:0x0a0a12, roughness:.3});
+  [-1,1].forEach(s=>{
+    const e=new THREE.Mesh(new THREE.SphereGeometry(0.009,16,16), eyeMat);
+    e.position.set(0.022*s, 0.205, S/2+0.002);
+    robot.add(e); eyes.push(e);
+  });
+}
+
+function resetAll(){
+  if(robot) scene.remove(robot);
+  if(cube) scene.remove(cube);
+  robot=null; cube=null; pieces=[]; eyes.length=0;
+  placed=false; transforming=false;
+  if(reticle) reticle.visible=true;
+  show(['btnEnter']);
+  setHint('Namier na stôl a ťukni — kocka tam dopadne. Potom <b>🤖 Premena</b>.');
+}
+
+// ---------- init ----------
+function init(){
+  scene=new THREE.Scene();
+  camera=new THREE.PerspectiveCamera(70, innerWidth/innerHeight, 0.01, 50);
+  scene.add(new THREE.HemisphereLight(0xffffff,0xbbbbbb,0.9));
+  const l=new THREE.DirectionalLight(0xffffff,0.6); l.position.set(1,2,1); scene.add(l);
+
+  renderer=new THREE.WebGLRenderer({antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setSize(innerWidth,innerHeight);
+  renderer.xr.enabled=true;
+  document.getElementById('app').appendChild(renderer.domElement);
+
+  // reticle - krúžok na stole
+  reticle=new THREE.Group();
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(0.04,0.008,12,24),
+    new THREE.MeshBasicMaterial({color:0xffcf8f}));
+  ring.rotation.x=-Math.PI/2; reticle.add(ring);
+  const dot=new THREE.Mesh(new THREE.CircleGeometry(0.012,20),
+    new THREE.MeshBasicMaterial({color:0xff7e5f}));
+  dot.rotation.x=-Math.PI/2; reticle.add(dot);
+  reticle.visible=false; scene.add(reticle);
+
+  controller=renderer.xr.getController(0);
+  controller.addEventListener('select', onSelect);
+  scene.add(controller);
+
+  const arBtn=ARButton.createButton(renderer,{
+    requiredFeatures:['hit-test'],
+    optionalFeatures:['dom-overlay']
+  },{domOverlay:{root:document.getElementById('overlay')}});
+  arBtn.style.display='none';
+  btnEnter.addEventListener('click', ()=>arBtn.click());
+  btnEnter.classList.remove('hidden');
+  // ak ARButton pripojí aj vlastný prvok, skry ho
+  if(arBtn.parentNode===document.body) arBtn.style.display='none';
+
+  renderer.setAnimationLoop(onRender);
+}
+function onRender(t,frame){
+  updateHitTest(frame);
+  updateDynamics();
+  renderer.render(scene,camera);
+}
+function onSelect(){
+  if(!placed && reticle && reticle.visible){
+    const p=new THREE.Vector3();
+    reticle.getWorldPosition(p);
+    placeCubeAt(p);
+  }
+}
+
+function updateHitTest(frame){
+  const session=renderer.xr.getSession();
+  if(!session) return;
+  if(!hitTestSourceRequested){
+    hitTestSourceRequested=true;
+    session.requestReferenceSpace('viewer').then(space=>{
+      referenceSpace=space;
+      return session.requestHitTestSource({space});
+    }).then(src=>{ hitTestSource=src; }).catch(()=>{});
+    return;
+  }
+  if(hitTestSource && reticle){
+    const results=frame.getHitTestResults(hitTestSource);
+    if(results.length){
+      const pose=results[0].getPose(referenceSpace);
+      if(pose){
+        reticle.visible=true;
+        reticle.position.set(pose.transform.position.x,pose.transform.position.y,pose.transform.position.z);
+        reticle.quaternion.set(pose.transform.orientation.x,pose.transform.orientation.y,pose.transform.orientation.z,pose.transform.orientation.w);
+      }
+    } else reticle.visible=false;
+  }
+}
+
+function updateDynamics(){
+  pieces.forEach(pc=>{
+    if(pc.phase==='boom'){
+      const p=easeOut(Math.min(1,(performance.now()-pc.start)/450));
+      pc.mesh.position.copy(pc.home).lerp(pc.target,p);
+    } else if(pc.phase==='assemble'){
+      const p=easeOut(Math.min(1,(performance.now()-pc.start)/650));
+      pc.mesh.position.copy(pc.boomFrom||pc.home).lerp(pc.target,p);
+    }
+  });
+  if(robot && !transforming){
+    const t=performance.now()/1000;
+    robot.position.y = robotBaseY + Math.sin(t*3)*0.004;
+    eyes.forEach((e,i)=>{ e.scale.y = Math.max(0.15, Math.abs(Math.sin(t*2.4+i))); });
+    if(pieces.length>=4){
+      pieces[2].mesh.rotation.z =  Math.sin(t*4)*0.25;
+      pieces[3].mesh.rotation.z = -Math.sin(t*4)*0.25;
+    }
+  }
+}
+
+btnPremena.addEventListener('click', transformToRobot);
+btnZnova.addEventListener('click', resetAll);
+
+window.addEventListener('resize', ()=>{
+  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight);
+});
+
+init();
+</script>
+</body>
+</html>
