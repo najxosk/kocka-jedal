@@ -19,68 +19,77 @@
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     padding:16px; touch-action:none;
   }
-  h1{
-    font-size:26px; margin:0 0 6px; font-weight:800; letter-spacing:.5px;
-    display:flex; align-items:center; gap:8px;
-  }
-  .sub{color:var(--dim); font-size:15px; margin-bottom:14px; text-align:center;}
+  h1{font-size:26px; margin:0 0 6px; font-weight:800; letter-spacing:.5px;
+    display:flex; align-items:center; gap:8px;}
+  .sub{color:var(--dim); font-size:15px; margin-bottom:12px; text-align:center;}
   .sub b{color:var(--accent);}
 
   /* Toggle */
-  .toggle{
-    display:flex; background:rgba(255,255,255,.08); border-radius:999px; padding:4px;
-    gap:4px; margin-bottom:22px; border:1px solid rgba(255,255,255,.15);
-  }
-  .toggle button{
-    border:0; background:transparent; color:var(--dim); font-weight:700;
-    padding:8px 16px; border-radius:999px; font-size:14px; cursor:pointer;
-  }
+  .toggle{display:flex; background:rgba(255,255,255,.08); border-radius:999px; padding:4px;
+    gap:4px; margin-bottom:18px; border:1px solid rgba(255,255,255,.15);}
+  .toggle button{border:0; background:transparent; color:var(--dim); font-weight:700;
+    padding:8px 16px; border-radius:999px; font-size:14px; cursor:pointer;}
   .toggle button.on{background:linear-gradient(135deg,var(--accent2),var(--accent)); color:#3a2418;}
 
   /* Dice stage */
-  .stage{width:140px; height:140px; perspective:600px; margin-bottom:24px;}
+  .stage{width:190px; height:190px; perspective:720px; margin:4px 0 6px; position:relative;}
   .dice{
-    width:140px; height:140px; position:relative; transform-style:preserve-3d;
-    cursor:pointer;
+    width:150px; height:150px; position:absolute; top:20px; left:20px;
+    transform-style:preserve-3d; cursor:pointer;
+    transition:transform 1.15s cubic-bezier(.17,.6,.2,1);
+    will-change:transform; transform:rotateX(0deg) rotateY(0deg);
   }
   .face{
-    position:absolute; width:140px; height:140px; border-radius:18px;
-    background:linear-gradient(145deg,#fff, #ffe4b8);
+    position:absolute; width:150px; height:150px; border-radius:20px;
+    background:linear-gradient(145deg,#ffffff, #ffdca0);
     display:flex; align-items:center; justify-content:center;
-    font-size:66px; box-shadow:inset -6px -8px 18px rgba(0,0,0,.18);
+    font-size:54px; box-shadow:inset -8px -10px 22px rgba(120,70,10,.28);
+    border:2px solid rgba(180,120,40,.35);
+    transition:transform .6s cubic-bezier(.3,.6,.4,1), opacity .45s ease .1s;
+    pointer-events:none;
   }
-  .f1{transform:rotateY(0deg)    translateZ(70px);}
-  .f2{transform:rotateY(90deg)   translateZ(70px);}
-  .f3{transform:rotateY(180deg)  translateZ(70px);}
-  .f4{transform:rotateY(-90deg)  translateZ(70px);}
-  .f5{transform:rotateX(90deg)   translateZ(70px);}
-  .f6{transform:rotateX(-90deg)  translateZ(70px);}
-  .dice.spin{animation:roll 1s cubic-bezier(.2,.7,.3,1.1);}
-  @keyframes roll{
-    0%   {transform:rotateX(0) rotateY(0) rotateZ(0);}
-    25%  {transform:rotateX(220deg) rotateY(140deg) rotateZ(80deg);}
-    50%  {transform:rotateX(420deg) rotateY(300deg) rotateZ(-60deg);}
-    75%  {transform:rotateX(560deg) rotateY(460deg) rotateZ(40deg);}
-    100% {transform:rotateX(700deg) rotateY(620deg) rotateZ(0);}
+  .face .glow{position:absolute; inset:0; border-radius:20px;
+    background:radial-gradient(circle at 32% 26%, rgba(255,255,255,.95), rgba(255,255,255,0) 45%);}
+  .face .em{position:relative;}
+  .f1{transform:rotateY(0deg)    translateZ(75px);}
+  .f2{transform:rotateY(90deg)   translateZ(75px);}
+  .f3{transform:rotateY(180deg)  translateZ(75px);}
+  .f4{transform:rotateY(-90deg)  translateZ(75px);}
+  .f5{transform:rotateX(90deg)   translateZ(75px);}
+  .f6{transform:rotateX(-90deg)  translateZ(75px);}
+
+  /* rozpad kocky - kazda tvar vyleti inym smerom */
+  .face.no{opacity:0; visibility:hidden;}
+  .show.f1{transform:translate(-150px,-90px) rotate(-32deg) rotateX(45deg); opacity:0;}
+  .show.f2{transform:translate(150px,-70px) rotate(26deg); opacity:0;}
+  .show.f3{transform:translate(-20px,-185px) rotate(8deg) scale(.8); opacity:0;}
+  .show.f4{transform:translate(-170px,50px) rotate(-14deg); opacity:0;}
+  .show.f5{transform:translate(90px,175px) rotate(36deg); opacity:0;}
+  .show.f6{transform:translate(-80px,180px) rotate(-34deg); opacity:0;}
+
+  /* jedlo - spadne zo stredu kocky */
+  .food{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:100px; line-height:1; filter:drop-shadow(0 14px 18px rgba(0,0,0,.5));
+    opacity:0; transform:scale(.2) translateY(10px);
+    transition:transform .55s cubic-bezier(.2,.85,.35,1.3), opacity .25s ease;
+    pointer-events:none;
   }
+  .food.shown{opacity:1; transform:scale(1) translateY(0);}
 
   /* Result card */
-  .card{
-    width:100%; max-width:340px; min-height:130px;
+  .card{width:100%; max-width:340px; min-height:118px;
     background:var(--card); color:var(--card-txt); border-radius:22px;
-    padding:20px 22px; text-align:center;
+    padding:14px 22px; text-align:center;
     box-shadow:0 18px 40px rgba(0,0,0,.45);
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    position:relative; overflow:hidden;
-  }
-  .card .hangry{font-size:34px; margin-bottom:6px; line-height:1;}
-  .card .idea{font-size:24px; font-weight:800; margin:0; line-height:1.25;}
-  .card .kind-tag{
-    position:absolute; top:12px; right:12px; font-size:12px; font-weight:700;
-    background:var(--accent); color:#3a2418; padding:3px 10px; border-radius:999px;
-  }
+    position:relative; overflow:hidden; margin-top:10px;}
+  .card .idea{font-size:23px; font-weight:800; margin:0; line-height:1.2;}
+  .card .note{font-size:13px; color:#8a6a48; margin-top:4px;}
+  .card .kind-tag{position:absolute; top:10px; right:12px; font-size:12px; font-weight:700;
+    background:var(--accent); color:#3a2418; padding:3px 10px; border-radius:999px;}
   .card.hidden{display:none;}
-  .hint{color:var(--dim); font-size:14px; margin-top:14px; text-align:center;}
+  .hint{color:var(--dim); font-size:14px; margin-top:12px; min-height:20px; text-align:center;}
 </style>
 </head>
 <body>
@@ -93,20 +102,21 @@
     <button data-mode="veg">🥦 Vegetariánska</button>
   </div>
 
-  <div class="stage">
+  <div class="stage" id="stage">
     <div class="dice" id="dice">
-      <div class="face f1">🍕</div>
-      <div class="face f2">🍜</div>
-      <div class="face f3">🍝</div>
-      <div class="face f4">🌮</div>
-      <div class="face f5">🥘</div>
-      <div class="face f6">🍣</div>
+      <div class="face f1"><span class="glow"></span><b class="em">🍕</b></div>
+      <div class="face f2"><span class="glow"></span><b class="em">🍜</b></div>
+      <div class="face f3"><span class="glow"></span><b class="em">🍝</b></div>
+      <div class="face f4"><span class="glow"></span><b class="em">🌮</b></div>
+      <div class="face f5"><span class="glow"></span><b class="em">🥘</b></div>
+      <div class="face f6"><span class="glow"></span><b class="em">🍣</b></div>
     </div>
+    <div class="food" id="food">🍕</div>
   </div>
 
   <div class="card hidden" id="card">
-    <div class="hangry" id="hangry"></div>
     <p class="idea" id="idea"></p>
+    <div class="note" id="note"></div>
     <div class="kind-tag" id="kindTag"></div>
   </div>
   <div class="hint" id="hint">Dotkni sa kocky 🎲</div>
@@ -132,69 +142,131 @@
     ['🍔','Burger s hranolkami','Fast food deň, nikomu to nehovor.'],
     ['🍣','Sushi set','Ľahké a trochu luxusné.'],
     ['🍗','Pečené kura s ryžou','Bezpečná voľba, čo nikdy nesklame.'],
-    ['🫕','Fondue na spôsob prím','Roztopený syr = šťastná nálada.'],
-    ['🌭','Hotdog s knedľou','Kedysi z bufetu, dnes chýba.'],
+    ['🫕','Fondue','Roztopený syr = šťastná nálada.'],
+    ['🌭','Hotdog','Kedysi z bufetu, dnes chýba.'],
     ['🥓','Slanina s vajcami','Raňajky, ktoré môžeš jesť aj večer.'],
-    ['🍖','Bravčové rezne s kašou','Nedeľná paráda.'],
+    ['🍖','Rezne s kašou','Nedeľná paráda.'],
     ['🍲','Kapustnica','Fermentovaná chuť Slovenska.'],
     ['🥟','Plnené pirohy','S bryndzou alebo s tvarohom.'],
-    ['🍗','Kura popcorn s dipom','Malé kúsky, veľká radosť.'],
+    ['🍗','Kura popcorn','Malé kúsky, veľká radosť.'],
     ['🍜','Fazuľový guláš','Sýty a lacný, ako od babky.'],
     ['🌶️','Chilli con carne','Ostré pre odvážnych.'],
-    ['🍚','Vyprážaná ryža s kuracím','Rýchle, chutné, z panvice.'],
-    ['🥣','Krutonová polievka','Paradajková s čerstvým chlebom.'],
-    ['🧀','Grilovaný syr so šalátom','Relax na tanieri.'],
-    ['🥔','Francúzske zemiaky','Maslo a kôpor, jednoduché srdce.'],
-    ['🫓','Kebab s chlebom','Neskorá večera, keď vtedy jedeš.'],
+    ['🍚','Vyprážaná ryža','Rýchle, chutné, z panvice.'],
+    ['🥣','Krutonová polievka','Paradajková s chlebom.'],
+    ['🧀','Zapekaný syr','Relax na tanieri.'],
+    ['🥔','Francúzske zemiaky','Maslo a kôpor.'],
+    ['🫓','Kebab','Neskorá večera.'],
     ['🍤','Plnené krevety','Nech sa ti v lete páči.'],
-    ['🥖','Bageta s pečeným mäsom','Na výlet, nie na tanier.'],
-    ['🍳','Omeleta so žampiónmi','Mäkká, nadýchaná, s láskou.'],
+    ['🥖','Bageta s mäsom','Na výlet, nie na tanier.'],
+    ['🍳','Omeleta so žampiónmi','Mäkká, nadýchaná.'],
   ];
 
   var VEG = [
     ['🥦','Brokolica s cestovinami','Zelená a dobre.'],
     ['🥗','Šalát s avokádom','Ľahký obed, žiadna ťarcha.'],
     ['🍕','Veggi pizza','Čistá zeleninová klasika.'],
-    ['🥔','Šťavnaté zemiaky s tvargom','Sýto a jemne.'],
-    ['🥟','Bryndzové pirohy','Slovenská vegetariánska hviezda.'],
+    ['🥔','Zemiaky s tvarohom','Sýto a jemne.'],
+    ['🥟','Bryndzové pirohy','Slovenská hviezda.'],
     ['🍲','Zeleninová polievka','Hreje tak, že sa ti to páči.'],
-    ['🥑','Toast s avokádom','Brunch, ktorý vyzerá na Instagram.'],
-    ['🫛','Cícer na kari s ryžou','Orientálna chuť plná bielkovín.'],
-    ['🧀','Grilovaný syr so zeleninou','Zmäkčený a slaný, perfektný.'],
-    ['🥔','Halušky s hubovou omáčkou','Lesná láska na tanieri.'],
-    ['🥕','Zeleninové kari s kokosom','Sladké a sýte.'],
-    ['🍝','Penne s bazalkovým pestom','Vône, na ktoré nezabudneš.'],
-    ['🥞','Slané lievance so syrom','Zmena oproti sladkým.'],
-    ['🥬','Špenát so smotanou a zemiakov','Zdravé srdce na tanieri.'],
-    ['🫑','Plnená paprika so šošovicou','Plnenie bez mäsa, chuť nezmenená.'],
-    ['🥙','Falafel v pitke','Chrumkavé a voňavé.'],
-    ['🍆','Parmigiana (baklažán)','Talianska vrstvená dobrota.'],
-    ['🌽','Mexická kukuricová polievka','Krémová a sladká.'],
-    ['🥦','Karfiol s omáčkou','Upravený na mäso podľa nálady.'],
-    ['🍛','Šošovicový prívarok s haluškami','Klasika, čo si zamiluješ.'],
-    ['🥟','Knedličky so zemiakovou omáčkou','Romantika večera.'],
-    ['🥔','Zemiakové placky','Chrumkavé, zlaté, šťavnaté.'],
-    ['🥗','Caprese salad','Paradajky, mozzarella, bazalka.'],
-    ['🍄','Hubová omáčka s knedľou','Vôňa lesa, oddych.'],
+    ['🥑','Toast s avokádom','Brunch na Instagram.'],
+    ['🫛','Cícer na kari','Orientálna chuť plná bielkovín.'],
+    ['🧀','Grilovaný syr','Zmäkčený a slaný.'],
+    ['🥔','Halušky s hubami','Lesná láska na tanieri.'],
+    ['🥕','Zeleninové kari','Sladké a sýte.'],
+    ['🍝','Penne s pestom','Vône, na ktoré nezabudneš.'],
+    ['🥞','Slané lievance','Zmena oproti sladkým.'],
+    ['🥬','Špenát so smotanou','Zdravé srdce.'],
+    ['🫑','Plnená paprika','Plnenie bez mäsa, chuť nezmenená.'],
+    ['🥙','Falafel','Chrumkavé a voňavé.'],
+    ['🍆','Parmigiana','Talianska vrstvená dobrota.'],
+    ['🌽','Kukuricová polievka','Krémová a sladká.'],
+    ['🥦','Karfiol s omáčkou','Upravený podľa nálady.'],
+    ['🍛','Šošovicový prívarok','Klasika, čo si zamiluješ.'],
+    ['🥟','Knedličky','Romantika večera.'],
+    ['🥔','Zemiakové placky','Chrumkavé, zlaté.'],
+    ['🥗','Caprese','Paradajky, mozzarella, bazalka.'],
+    ['🍄','Hubová omáčka s knedľou','Vôňa lesa.'],
   ];
 
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
   var dice = document.getElementById('dice');
+  var stage = document.getElementById('stage');
+  var food = document.getElementById('food');
   var card = document.getElementById('card');
-  var hangry = document.getElementById('hangry');
   var idea = document.getElementById('idea');
+  var note = document.getElementById('note');
   var kindTag = document.getElementById('kindTag');
   var hint = document.getElementById('hint');
+  var faces = Array.prototype.slice.call(dice.querySelectorAll('.face'));
   var log = LOG();
+  var busy = false;
 
   function currentArr(){ return MODE==='veg'?VEG:KLASIKA; }
-  // vyberanie tak, aby som nehádzal to isté dvakrát za sebou
+
   function pickAvoidLast(arr){
     var last = log.length ? log[log.length-1] : null;
     var candidates = arr.filter(function(x){ return x[1] !== last; });
     if(!candidates.length) candidates = arr;
     return pick(candidates);
+  }
+
+  function setFaceEmoji(idx, emoji){
+    var b = faces[idx].querySelector('.em');
+    if(b) b.textContent = emoji;
+  }
+
+  // vrat kocku do kocky + schovaj jedlo
+  function resetCube(){
+    dice.style.transform = 'rotateX(0deg) rotateY(0deg)';
+    faces.forEach(function(f){ f.classList.remove('show'); f.classList.add('no'); });
+    food.classList.remove('shown');
+  }
+
+  function roll(){
+    if(busy) return;
+    var arr = currentArr();
+    var item = pickAvoidLast(arr);
+    log.push(item[1]);
+    if(log.length>10) log=log.slice(-10);
+    LOGSAVE(log);
+
+    busy = true;
+    card.classList.add('hidden');
+    hint.textContent = 'Točí sa…';
+
+    // 1) schovaj jedlo, priprav kocku
+    resetCube();
+    setTimeout(function(){
+      var shown=[];
+      for(var i=0;i<6;i++) shown.push(pick(arr)[0]);
+      faces.forEach(function(f,idx){ setFaceEmoji(idx,shown[idx]); });
+      // zloz kocku (odobrat skryte) a roztoc
+      faces.forEach(function(f){ f.classList.remove('no'); });
+      void dice.offsetWidth;
+      var sx = (Math.floor(Math.random()*3)+3)*360;
+      var sy = (Math.floor(Math.random()*3)+2)*360;
+      var tilt = (Math.random()*2-1)*14;
+      dice.style.transform = 'rotateX('+sx.toFixed(1)+'deg) rotateY('+sy.toFixed(1)+'deg) rotateZ('+tilt.toFixed(1)+'deg)';
+    }, 250);
+
+    setTimeout(function(){
+      // 3) rozpad + vyberie jedlo: tvar f5 predstavuje "hornu" tvar kocky
+      food.textContent = item[0];
+      faces.forEach(function(f){ f.classList.add('show'); });
+      void food.offsetWidth;
+      food.classList.add('shown');
+      showCard(item, arr===VEG);
+      hint.textContent = 'Hop! Dotkni sa pre ďalší hod';
+      busy = false; /* kocka je pripravena na dalsi hod hned, ako vyskovci jedlo */
+    }, 1500);
+  }
+
+  function showCard(item, isVeg){
+    idea.textContent = item[1];
+    note.textContent = item[2];
+    kindTag.textContent = isVeg ? '🥦 Veg' : '🍖 Klasika';
+    card.classList.remove('hidden');
   }
 
   function applyToggle(){
@@ -204,67 +276,37 @@
     });
   }
 
-  function roll(){
-    var arr = currentArr();
-    var item = pickAvoidLast(arr);
-    log.push(item[1]);
-    if(log.length>10) log=log.slice(-10);
-    LOGSAVE(log);
-
-    var faces = dice.querySelectorAll('.face');
-    // random faces
-    var shown = [];
-    for(var i=0;i<6;i++) shown.push(pick(arr));
-    faces.forEach(function(f,idx){ f.textContent = shown[idx][0]; });
-
-    dice.classList.remove('spin');
-    void dice.offsetWidth; // restart animacia
-    dice.classList.add('spin');
-
-    detail(item, arr===VEG);
-    setTimeout(function(){ dice.classList.remove('spin'); }, 1100);
-  }
-
-  function detail(item, isVeg){
-    var idx = log.indexOf(item[1]) + 1;
-    hangry.textContent = item[0];
-    idea.textContent = item[1];
-    kindTag.textContent = isVeg ? '🥦 Veg' : '🍖 Klasika';
-    card.classList.remove('hidden');
-    d('kocka_log', 'posledny:'+item[1]);
-    hint.textContent = 'Číslo v rade: #' + idx + ' — hod znova!';
-  }
-
   var t = document.getElementById('toggle');
   t.addEventListener('pointerup', function(e){
     var b = e.target.closest('button');
     if(!b) return;
     MODE = b.dataset.mode;
     applyToggle();
-    LOGSAVE(log);
-    document.getElementById('card').classList.add('hidden');
+    card.classList.add('hidden');
     hint.textContent = 'Dotkni sa kocky 🎲';
-    // reset faces inline
-    var faces=dice.querySelectorAll('.face');
+    resetCube();
     var arr=currentArr();
-    faces.forEach(function(f,i){ f.textContent = i<arr.length?arr[i][0]:'❓'; });
+    faces.forEach(function(f,idx){
+      setTimeout(function(){ f.classList.remove('no'); }, idx*40);
+      setFaceEmoji(idx, arr[idx%arr.length][0]);
+    });
   });
   t.addEventListener('pointerdown', function(e){ e.preventDefault(); });
   t.addEventListener('touchstart', function(e){ e.preventDefault(); }, {passive:false});
 
-  // Cesta: pointerup na container (dotyk aj mys)
-  document.getElementById('dice').parentElement.addEventListener('pointerup', function(e){
-    if(e.target.closest('#dice')) roll();
+  stage.addEventListener('pointerup', function(e){
+    roll();
   });
-  document.getElementById('dice').addEventListener('pointerdown', function(e){ e.preventDefault(); });
-  document.getElementById('dice').addEventListener('touchstart', function(e){ e.preventDefault(); }, {passive:false});
+  stage.addEventListener('pointerdown', function(e){ e.preventDefault(); });
+  stage.addEventListener('touchstart', function(e){ e.preventDefault(); }, {passive:false});
 
-  function d(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
-
-  // debug API pre testy
   window.GAME = {
-    get: function(){ return { mode: MODE, count: (MODE==='veg'?VEG:KLASIKA).length,
-      last: log.length?log[log.length-1]:null, vis: card.classList.contains('hidden')?'hidden':'shown' }; },
+    get: function(){ return { mode: MODE,
+      last: log.length?log[log.length-1]:null,
+      vis: card.classList.contains('hidden')?'hidden':'shown',
+      busy: busy,
+      foodShown: food.classList.contains('shown'),
+      face1: (dice.querySelector('.f1 .em')||{}).textContent }; },
     set: function(m){ MODE = (m==='veg')?'veg':'klasika'; applyToggle(); },
     roll: function(){ roll(); },
     count: function(){ return (MODE==='veg'?VEG:KLASIKA).length; }
