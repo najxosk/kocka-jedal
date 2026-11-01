@@ -36,11 +36,15 @@
     border-radius:12px; padding:8px 14px; margin-bottom:10px;
   }
   #hint b { color:#ffcf8f; }
+  #backto { position:fixed; top:calc(env(safe-area-inset-top,0px) + 12px); left:50%; transform:translateX(-50%);
+    pointer-events:auto; color:#ffcf8f; background:rgba(0,0,0,.45); text-decoration:none;
+    font-size:13px; padding:7px 14px; border-radius:999px; z-index:10; }
   .hidden { display:none !important; }
 </style>
 </head>
 <body>
   <div id="app"></div>
+  <a id="backto" href="index.html">← Kocka jedál</a>
   <div id="overlay">
     <div id="hint">Otvoriť AR — nasmeruj telefón na stôl 🎲</div>
     <div id="btnOverlay">
