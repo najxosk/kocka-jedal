@@ -1,7 +1,7 @@
 {
   "name": "Kocka jedál 🎲",
   "short_name": "Kocka jedál",
-  "description": "Hod kockou a zisti, čo dnes jesť. Klasika alebo vegánsky.",
+  "description": "Ťukni na kocku na polici. Spadne, dokotúľa sa a otvorí, čo dnes jesť.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

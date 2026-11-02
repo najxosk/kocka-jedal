@@ -1,4 +1,4 @@
-const CACHE = 'kocka-jedal-v2';
+const CACHE = 'kocka-jedal-v3';
 const ASSETS = [
   './',
   './index.html',
