@@ -19,76 +19,109 @@
   html,body{height:100%;}
   body{
     margin:0; font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
-    background:radial-gradient(circle at 50% 20%, var(--bg2), var(--bg1) 70%);
-    color:#fff; overflow:hidden;
+    background:
+      radial-gradient(ellipse 58% 46% at 50% 44%, rgba(255,186,110,.15), transparent 68%),
+      radial-gradient(circle at 50% 16%, var(--bg2), var(--bg1) 74%);
+    color:#fff; overflow:hidden; user-select:none; -webkit-user-select:none;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    padding:16px; touch-action:none;
+    padding:max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    touch-action:none;
   }
   h1{font-size:26px; margin:0 0 6px; font-weight:800; letter-spacing:.5px;
     display:flex; align-items:center; gap:8px;}
   .sub{color:var(--dim); font-size:15px; margin-bottom:12px; text-align:center;}
   .sub b{color:var(--accent);}
 
-  /* Toggle */
   .toggle{display:flex; background:rgba(255,255,255,.08); border-radius:999px; padding:4px;
     gap:4px; margin-bottom:18px; border:1px solid rgba(255,255,255,.15);}
   .toggle button{border:0; background:transparent; color:var(--dim); font-weight:700;
-    padding:8px 16px; border-radius:999px; font-size:14px; cursor:pointer;}
+    padding:8px 16px; border-radius:999px; font-size:14px; cursor:pointer;
+    transition:background .25s ease, color .25s ease;}
   .toggle button.on{background:linear-gradient(135deg,var(--accent2),var(--accent)); color:#3a2418;}
 
-  /* Dice stage */
-  .stage{width:190px; height:190px; perspective:720px; margin:4px 0 6px; position:relative;}
+  .stage{
+    width:190px; height:190px; perspective:860px; margin:6px 0 8px;
+    position:relative; cursor:pointer;
+  }
+  .ground{
+    position:absolute; left:50%; top:158px; width:118px; height:28px;
+    transform:translateX(-50%); transform-origin:center;
+    background:radial-gradient(ellipse at center, rgba(0,0,0,.5), rgba(0,0,0,0) 70%);
+    filter:blur(1.5px); pointer-events:none; z-index:0; opacity:.4;
+  }
+  .burst{
+    position:absolute; left:50%; top:50%; width:200px; height:200px;
+    margin:-100px 0 0 -100px; border-radius:50%; pointer-events:none; z-index:1;
+    background:radial-gradient(circle, rgba(255,236,214,.72) 0%, rgba(255,196,120,.2) 34%, rgba(255,170,80,0) 68%);
+    opacity:0; transform:scale(.25);
+  }
   .dice{
-    width:150px; height:150px; position:absolute; top:20px; left:20px;
-    transform-style:preserve-3d; cursor:pointer;
-    transition:transform 1.15s cubic-bezier(.17,.6,.2,1);
-    will-change:transform; transform:rotateX(0deg) rotateY(0deg);
+    width:150px; height:150px; position:absolute; top:20px; left:20px; z-index:3;
+    -webkit-transform-style:preserve-3d; transform-style:preserve-3d;
+    cursor:pointer; will-change:transform;
+    transform:rotateX(0deg) rotateY(0deg);
   }
   .face{
+    --shade:.16;
     position:absolute; width:150px; height:150px; border-radius:20px;
-    background:linear-gradient(145deg,#ffffff, #ffdca0);
+    background:
+      linear-gradient(155deg, rgba(255,255,255,.72), rgba(255,255,255,0) 40%),
+      linear-gradient(180deg, #fff9f1 0%, #f2d4a4 100%);
     display:flex; align-items:center; justify-content:center;
-    font-size:54px; box-shadow:inset -8px -10px 22px rgba(120,70,10,.28);
-    border:2px solid rgba(180,120,40,.35);
-    transition:transform .6s cubic-bezier(.3,.6,.4,1), opacity .45s ease .1s;
+    font-size:54px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.88),
+      inset 0 -16px 26px rgba(110,64,12,.16);
+    border:1px solid rgba(150,98,36,.3);
+    -webkit-backface-visibility:hidden; backface-visibility:hidden;
     pointer-events:none;
   }
-  .face .glow{position:absolute; inset:0; border-radius:20px;
-    background:radial-gradient(circle at 32% 26%, rgba(255,255,255,.95), rgba(255,255,255,0) 45%);}
-  .face .em{position:relative;}
+  .face .shade{
+    position:absolute; inset:0; border-radius:inherit;
+    background:#3a2010; opacity:var(--shade); pointer-events:none;
+  }
+  .face .glow{
+    position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+    background:radial-gradient(circle at 30% 22%, rgba(255,255,255,.95), rgba(255,255,255,0) 46%);
+    opacity:.45;
+  }
+  .face .em{position:relative; z-index:1;}
   .f1{transform:rotateY(0deg)    translateZ(75px);}
   .f2{transform:rotateY(90deg)   translateZ(75px);}
   .f3{transform:rotateY(180deg)  translateZ(75px);}
   .f4{transform:rotateY(-90deg)  translateZ(75px);}
   .f5{transform:rotateX(90deg)   translateZ(75px);}
   .f6{transform:rotateX(-90deg)  translateZ(75px);}
-
-  /* rozpad kocky - kazda tvar vyleti inym smerom */
   .face.no{opacity:0; visibility:hidden;}
-  .show.f1{transform:translate(-150px,-90px) rotate(-32deg) rotateX(45deg); opacity:0;}
-  .show.f2{transform:translate(150px,-70px) rotate(26deg); opacity:0;}
-  .show.f3{transform:translate(-20px,-185px) rotate(8deg) scale(.8); opacity:0;}
-  .show.f4{transform:translate(-170px,50px) rotate(-14deg); opacity:0;}
-  .show.f5{transform:translate(90px,175px) rotate(36deg); opacity:0;}
-  .show.f6{transform:translate(-80px,180px) rotate(-34deg); opacity:0;}
 
-  /* jedlo - spadne zo stredu kocky */
+  .spark{
+    position:absolute; left:50%; top:50%; width:5px; height:5px; margin:-2px 0 0 -2px;
+    border-radius:50%; pointer-events:none; z-index:4;
+    background:radial-gradient(circle, #fff 0%, #ffe3b4 42%, rgba(255,196,110,0) 74%);
+  }
+
   .food{
-    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    font-size:100px; line-height:1; filter:drop-shadow(0 14px 18px rgba(0,0,0,.5));
-    opacity:0; transform:scale(.2) translateY(10px);
-    transition:transform .55s cubic-bezier(.2,.85,.35,1.3), opacity .25s ease;
+    position:absolute; inset:0; z-index:1;
+    display:flex; align-items:center; justify-content:center;
+    font-size:100px; line-height:1;
+    filter:drop-shadow(0 12px 14px rgba(0,0,0,.42));
+    opacity:0; transform:translate3d(0,-28px,0) scale(.4);
     pointer-events:none;
   }
-  .food.shown{opacity:1; transform:scale(1) translateY(0);}
+  .food.shown{opacity:1;}
 
-  /* Result card */
   .card{width:100%; max-width:340px; min-height:118px;
     background:var(--card); color:var(--card-txt); border-radius:22px;
     padding:14px 22px; text-align:center;
-    box-shadow:0 18px 40px rgba(0,0,0,.45);
+    box-shadow:0 18px 40px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.7);
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    position:relative; overflow:hidden; margin-top:10px;}
+    position:relative; overflow:hidden; margin-top:10px;
+    animation:cardIn .42s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes cardIn{
+    from{opacity:0; transform:translateY(12px) scale(.98);}
+    to{opacity:1; transform:none;}
+  }
   .card .idea{font-size:23px; font-weight:800; margin:0; line-height:1.2;}
   .card .note{font-size:13px; color:#8a6a48; margin-top:4px;}
   .card .kind-tag{position:absolute; top:10px; right:12px; font-size:12px; font-weight:700;
@@ -103,6 +136,9 @@
     background:linear-gradient(135deg,var(--accent2),var(--accent)); color:#3a2418;
     border:0; border-radius:999px; font-weight:800; font-size:14px; cursor:pointer;
     padding:11px 18px; box-shadow:0 8px 22px rgba(0,0,0,.35); z-index:50;}
+  @media (prefers-reduced-motion: reduce){
+    .card{animation:none;}
+  }
 </style>
 </head>
 <body>
@@ -117,15 +153,17 @@
   </div>
 
   <div class="stage" id="stage">
-    <div class="dice" id="dice">
-      <div class="face f1"><span class="glow"></span><b class="em">🍕</b></div>
-      <div class="face f2"><span class="glow"></span><b class="em">🍜</b></div>
-      <div class="face f3"><span class="glow"></span><b class="em">🍝</b></div>
-      <div class="face f4"><span class="glow"></span><b class="em">🌮</b></div>
-      <div class="face f5"><span class="glow"></span><b class="em">🥘</b></div>
-      <div class="face f6"><span class="glow"></span><b class="em">🍣</b></div>
-    </div>
+    <div class="ground"></div>
+    <div class="burst"></div>
     <div class="food" id="food">🍕</div>
+    <div class="dice" id="dice">
+      <div class="face f1"><span class="shade"></span><span class="glow"></span><b class="em">🍕</b></div>
+      <div class="face f2"><span class="shade"></span><span class="glow"></span><b class="em">🍜</b></div>
+      <div class="face f3"><span class="shade"></span><span class="glow"></span><b class="em">🍝</b></div>
+      <div class="face f4"><span class="shade"></span><span class="glow"></span><b class="em">🌮</b></div>
+      <div class="face f5"><span class="shade"></span><span class="glow"></span><b class="em">🥘</b></div>
+      <div class="face f6"><span class="shade"></span><span class="glow"></span><b class="em">🍣</b></div>
+    </div>
   </div>
 
   <div class="card hidden" id="card">
@@ -139,6 +177,14 @@
 <script>
 (function(){
   var MODE = localStorage.getItem('kocka_mode') || 'klasika';
+  var HALF = 75;
+  var LIGHT = norm3(-0.42, -0.74, 0.52);
+  var NORMALS = [
+    [0,0,1],[1,0,0],[0,0,-1],[-1,0,0],[0,-1,0],[0,1,0]
+  ];
+  var FACE_ROT = [
+    [0,0,0],[0,90,0],[0,180,0],[0,-90,0],[90,0,0],[-90,0,0]
+  ];
 
   function LOG(){
     try{ return JSON.parse(localStorage.getItem('kocka_log') || '[]'); }
@@ -215,6 +261,117 @@
   ];
 
   function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function norm3(x,y,z){
+    var L = Math.hypot(x,y,z) || 1;
+    return [x/L, y/L, z/L];
+  }
+  function qn(q){
+    var n = Math.hypot(q[0],q[1],q[2],q[3]) || 1;
+    return [q[0]/n, q[1]/n, q[2]/n, q[3]/n];
+  }
+  function qmul(a,b){
+    return [
+      a[0]*b[0] - a[1]*b[1] - a[2]*b[2] - a[3]*b[3],
+      a[0]*b[1] + a[1]*b[0] + a[2]*b[3] - a[3]*b[2],
+      a[0]*b[2] - a[1]*b[3] + a[2]*b[0] + a[3]*b[1],
+      a[0]*b[3] + a[1]*b[2] - a[2]*b[1] + a[3]*b[0]
+    ];
+  }
+  function qconj(q){ return [q[0], -q[1], -q[2], -q[3]]; }
+  function qrot(q, v){
+    var w=q[0], x=q[1], y=q[2], z=q[3];
+    var tx = 2*(y*v[2] - z*v[1]);
+    var ty = 2*(z*v[0] - x*v[2]);
+    var tz = 2*(x*v[1] - y*v[0]);
+    return [
+      v[0] + w*tx + (y*tz - z*ty),
+      v[1] + w*ty + (z*tx - x*tz),
+      v[2] + w*tz + (x*ty - y*tx)
+    ];
+  }
+  function qaxis(x,y,z,ang){
+    var h = ang*0.5, s = Math.sin(h), L = Math.hypot(x,y,z) || 1;
+    return [Math.cos(h), x/L*s, y/L*s, z/L*s];
+  }
+  function integrate(q, w, dt){
+    var len = Math.hypot(w[0], w[1], w[2]);
+    if (len < 1e-8) return q;
+    return qn(qmul(qaxis(w[0], w[1], w[2], len*dt), q));
+  }
+  function qmat(q){
+    var w=q[0], x=q[1], y=q[2], z=q[3];
+    var xx=x*x, yy=y*y, zz=z*z, xy=x*y, xz=x*z, yz=y*z, wx=w*x, wy=w*y, wz=w*z;
+    return [
+      1-2*(yy+zz), 2*(xy+wz), 2*(xz-wy), 0,
+      2*(xy-wz), 1-2*(xx+zz), 2*(yz+wx), 0,
+      2*(xz+wy), 2*(yz-wx), 1-2*(xx+yy), 0,
+      0,0,0,1
+    ];
+  }
+  function matStr(m){
+    var s = 'matrix3d(';
+    for (var i=0;i<16;i++){
+      s += (i ? ',' : '') + ((i%4===3) ? m[i] : m[i].toFixed(4));
+    }
+    return s + ')';
+  }
+  function cross(a,b){
+    return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+  }
+  function qFromBasis(X,Y,Z){
+    var m00=X[0], m01=Y[0], m02=Z[0];
+    var m10=X[1], m11=Y[1], m12=Z[1];
+    var m20=X[2], m21=Y[2], m22=Z[2];
+    var tr = m00+m11+m22, q, s;
+    if (tr > 0){
+      s = Math.sqrt(tr+1)*2;
+      q = [0.25*s, (m21-m12)/s, (m02-m20)/s, (m10-m01)/s];
+    } else if (m00 > m11 && m00 > m22){
+      s = Math.sqrt(1+m00-m11-m22)*2;
+      q = [(m21-m12)/s, 0.25*s, (m01+m10)/s, (m02+m20)/s];
+    } else if (m11 > m22){
+      s = Math.sqrt(1+m11-m00-m22)*2;
+      q = [(m02-m20)/s, (m01+m10)/s, 0.25*s, (m12+m21)/s];
+    } else {
+      s = Math.sqrt(1+m22-m00-m11)*2;
+      q = [(m10-m01)/s, (m02+m20)/s, (m12+m21)/s, 0.25*s];
+    }
+    return qn(q);
+  }
+  var RESTS = (function(){
+    var B = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+    var out = [];
+    for (var i=0;i<6;i++){
+      for (var j=0;j<6;j++){
+        if (B[i][0]*B[j][0] + B[i][1]*B[j][1] + B[i][2]*B[j][2] !== 0) continue;
+        out.push(qFromBasis(B[i], B[j], cross(B[i], B[j])));
+      }
+    }
+    return out;
+  })();
+  function nearestRest(q){
+    var best = RESTS[0], bestDot = -1;
+    for (var i=0;i<RESTS.length;i++){
+      var d = Math.abs(q[0]*RESTS[i][0] + q[1]*RESTS[i][1] + q[2]*RESTS[i][2] + q[3]*RESTS[i][3]);
+      if (d > bestDot){ bestDot = d; best = RESTS[i]; }
+    }
+    var dot = q[0]*best[0] + q[1]*best[1] + q[2]*best[2] + q[3]*best[3];
+    if (dot < 0) return [-best[0], -best[1], -best[2], -best[3]];
+    return [best[0], best[1], best[2], best[3]];
+  }
+  function errAxis(q, target){
+    var e = qn(qmul(target, qconj(q)));
+    if (e[0] < 0) e = [-e[0], -e[1], -e[2], -e[3]];
+    var w = Math.max(-1, Math.min(1, e[0]));
+    var ang = 2*Math.acos(w);
+    var s = Math.sqrt(Math.max(0, 1-w*w));
+    if (s < 1e-5) return {ax:0, ay:1, az:0, ang:0};
+    return {ax:e[1]/s, ay:e[2]/s, az:e[3]/s, ang:ang};
+  }
+  function reducedMotion(){
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+  function smooth(u){ return u*u*(3-2*u); }
 
   var dice = document.getElementById('dice');
   var stage = document.getElementById('stage');
@@ -224,9 +381,15 @@
   var note = document.getElementById('note');
   var kindTag = document.getElementById('kindTag');
   var hint = document.getElementById('hint');
+  var ground = stage.querySelector('.ground');
+  var burstEl = stage.querySelector('.burst');
   var faces = Array.prototype.slice.call(dice.querySelectorAll('.face'));
+  var glows = faces.map(function(f){ return f.querySelector('.glow'); });
   var log = LOG();
   var busy = false;
+  var rollToken = 0;
+  var anim = null;
+  var sparkNodes = [];
 
   function currentArr(){ return MODE==='veg'?VEG:KLASIKA; }
 
@@ -242,11 +405,367 @@
     if(b) b.textContent = emoji;
   }
 
-  // vrat kocku do kocky + schovaj jedlo
+  function lightFaces(q){
+    for (var i=0;i<6;i++){
+      var wn = qrot(q, NORMALS[i]);
+      var nd = wn[0]*LIGHT[0] + wn[1]*LIGHT[1] + wn[2]*LIGHT[2];
+      var lit = nd*0.5 + 0.5;
+      var shade = Math.min(0.5, 0.05 + (1-lit)*0.58);
+      faces[i].style.setProperty('--shade', shade.toFixed(3));
+      if (glows[i]){
+        var g = Math.max(0, wn[2]);
+        glows[i].style.opacity = (0.08 + 0.88*g*g).toFixed(3);
+      }
+    }
+  }
+
+  function setShadow(y, kick, fade){
+    var h = Math.max(0, -y);
+    var sc = 1 - Math.min(0.5, h/120) + kick;
+    var op = (0.28 + Math.min(0.14, kick)) * (1 - Math.min(0.62, h/150)) * fade;
+    ground.style.opacity = Math.max(0, op).toFixed(3);
+    ground.style.transform = 'translateX(-50%) scale('+sc.toFixed(3)+','+(sc*0.78).toFixed(3)+')';
+  }
+
+  function clearSparks(){
+    for (var i=0;i<sparkNodes.length;i++){
+      if (sparkNodes[i].el.parentNode) sparkNodes[i].el.parentNode.removeChild(sparkNodes[i].el);
+    }
+    sparkNodes = [];
+    burstEl.style.opacity = '0';
+    burstEl.style.transform = 'scale(.25)';
+  }
+
+  function applyDice(){
+    var sq = anim.squash || 0;
+    var sx = 1 - sq*0.45;
+    var sy = 1 + sq;
+    dice.style.transform = 'translate3d(0,'+anim.y.toFixed(2)+'px,0) scale3d('+sx.toFixed(4)+','+sy.toFixed(4)+',1) '+matStr(qmat(anim.q));
+  }
+
+  function spinSpeed(t){
+    var peak = 30;
+    if (t < 0.38) return peak;
+    var u = (t - 0.38) / 0.36;
+    if (u > 1) u = 1;
+    return peak * (1 - 0.72*smooth(u));
+  }
+
+  function stepBody(dt){
+    if (!(anim.y === 0 && anim.vy === 0)){
+      anim.vy += anim.g*dt;
+      anim.y += anim.vy*dt;
+      if (anim.y > 0 && anim.vy > 0){
+        var impact = anim.vy;
+        anim.y = 0;
+        anim.vy = -impact * 0.55;
+        anim.squash = -Math.min(0.075, 0.034 + impact/3800);
+        anim.kick = Math.min(0.3, impact/1000);
+        if (Math.abs(anim.vy) < 48) anim.vy = 0;
+        if (anim.phase === 'settle' && impact > 70){
+          anim.w[0] += (Math.random()*2-1) * Math.min(3.4, impact/70);
+          anim.w[2] += (Math.random()*2-1) * Math.min(3.4, impact/70);
+        }
+      }
+    }
+    anim.squash += (0 - anim.squash) * Math.min(1, dt*9);
+    anim.kick = (anim.kick || 0) * Math.exp(-6.5*dt);
+  }
+
+  function stepSpin(dt){
+    var u = Math.min(1, anim.t/0.95);
+    var ax = norm3(
+      anim.axisA[0]*(1-u) + anim.axisB[0]*u,
+      anim.axisA[1]*(1-u) + anim.axisB[1]*u,
+      anim.axisA[2]*(1-u) + anim.axisB[2]*u
+    );
+    var sp = spinSpeed(anim.t);
+    anim.w = [ax[0]*sp, ax[1]*sp, ax[2]*sp];
+    anim.q = integrate(anim.q, anim.w, dt);
+    stepBody(dt);
+    applyDice();
+    lightFaces(anim.q);
+    setShadow(anim.y, anim.kick || 0, 1);
+    if (anim.t > 0.72) enterSettle();
+  }
+
+  function enterSettle(){
+    if (anim.phase === 'settle') return;
+    anim.phase = 'settle';
+    anim.settleT = 0;
+    anim.target = nearestRest(anim.q);
+  }
+
+  function stepSettle(dt){
+    anim.settleT += dt;
+    var err = errAxis(anim.q, anim.target);
+    var kp = 168, kd = 10.2;
+    anim.w[0] += (kp*err.ang*err.ax - kd*anim.w[0]) * dt;
+    anim.w[1] += (kp*err.ang*err.ay - kd*anim.w[1]) * dt;
+    anim.w[2] += (kp*err.ang*err.az - kd*anim.w[2]) * dt;
+    anim.q = integrate(anim.q, anim.w, dt);
+    stepBody(dt);
+    applyDice();
+    lightFaces(anim.q);
+    setShadow(anim.y, anim.kick || 0, 1);
+
+    var speed = Math.hypot(anim.w[0], anim.w[1], anim.w[2]);
+    var calm = err.ang < 0.07 && speed < 0.7 && anim.y > -1.2 && anim.vy === 0;
+    if ((calm && anim.settleT > 0.42) || anim.settleT > 0.86) enterBurst();
+  }
+
+  function enterBurst(){
+    anim.phase = 'burst';
+    anim.burstT = 0;
+    if (Math.abs(anim.y) < 6) anim.y = 0;
+    anim.vy = 0;
+    anim.squash = 0;
+    applyDice();
+    var amp = anim.reduce ? 0.28 : 1;
+    var inv = qconj(anim.q);
+    var rightL = qrot(inv, [1, 0, 0]);
+    var upL = qrot(inv, [0, -1, 0]);
+    anim.gL = qrot(inv, [0, 1320 * amp, 0]);
+    anim.parts = faces.map(function(el, i){
+      var n = NORMALS[i];
+      var px = n[0]*HALF, py = n[1]*HALF, pz = n[2]*HALF;
+      var sx = px*rightL[0] + py*rightL[1] + pz*rightL[2];
+      var sy = px*upL[0] + py*upL[1] + pz*upL[2];
+      var sl = Math.hypot(sx, sy);
+      var dirx, diry, bend;
+      if (sl < 24){
+        var a = Math.random()*Math.PI*2;
+        dirx = Math.cos(a);
+        diry = Math.sin(a);
+      } else {
+        dirx = sx/sl;
+        diry = sy/sl;
+      }
+      bend = Math.random()<0.5 ? -1 : 1;
+      var flee = (240 + Math.random()*150) * amp;
+      var out = (150 + Math.random()*80) * amp;
+      var curveMag = (420 + Math.random()*340) * amp * bend;
+      el.style.opacity = '1';
+      el.style.visibility = 'visible';
+      el.style.backfaceVisibility = 'visible';
+      return {
+        el: el,
+        pos: [px, py, pz],
+        vel: [
+          rightL[0]*dirx*flee + upL[0]*diry*flee + n[0]*out,
+          rightL[1]*dirx*flee + upL[1]*diry*flee + n[1]*out,
+          rightL[2]*dirx*flee + upL[2]*diry*flee + n[2]*out
+        ],
+        curve: [
+          (-rightL[0]*diry + upL[0]*dirx) * curveMag,
+          (-rightL[1]*diry + upL[1]*dirx) * curveMag,
+          (-rightL[2]*diry + upL[2]*dirx) * curveMag
+        ],
+        rot: FACE_ROT[i].slice(),
+        spin: [
+          (Math.random()*2-1)*160*amp,
+          (Math.random()*2-1)*180*amp,
+          (Math.random()*2-1)*210*amp
+        ]
+      };
+    });
+
+    food.textContent = anim.item[0];
+    food.classList.add('shown');
+    food.style.opacity = '0';
+    anim.food = {
+      x:(Math.random()*2-1)*8*amp,
+      y:-40*amp,
+      v:8*amp,
+      sc: anim.reduce ? 0.86 : 0.36,
+      rot:(Math.random()*2-1)*12*amp,
+      rv:(Math.random()*2-1)*46*amp,
+      sq:0,
+      sqv:0,
+      g: 500*amp,
+      rest: false
+    };
+    burstEl.style.opacity = anim.reduce ? '0' : '0.8';
+    burstEl.style.transform = 'scale(.22)';
+    var sparkCount = anim.reduce ? 0 : 10;
+    for (var i=0;i<sparkCount;i++){
+      var node = document.createElement('i');
+      node.className = 'spark';
+      var size = 3 + Math.random()*4;
+      node.style.width = size.toFixed(1)+'px';
+      node.style.height = size.toFixed(1)+'px';
+      stage.appendChild(node);
+      var ang = Math.random()*Math.PI*2;
+      var spd = 70 + Math.random()*230;
+      sparkNodes.push({
+        el: node,
+        x:(Math.random()*2-1)*12,
+        y:-8+(Math.random()*2-1)*12,
+        vx:Math.cos(ang)*spd,
+        vy:Math.sin(ang)*spd - 90,
+        life:0.42+Math.random()*0.32
+      });
+    }
+    showCard(anim.item, anim.isVeg);
+    hint.textContent = 'Hop! Dotkni sa pre ďalší hod';
+    busy = false;
+  }
+
+  function faceXf(p, sc){
+    return 'translate3d('+p.pos[0].toFixed(1)+'px,'+p.pos[1].toFixed(1)+'px,'+p.pos[2].toFixed(1)+'px) '+
+      'rotateX('+p.rot[0].toFixed(1)+'deg) rotateY('+p.rot[1].toFixed(1)+'deg) rotateZ('+p.rot[2].toFixed(1)+'deg) '+
+      'scale('+sc.toFixed(3)+')';
+  }
+
+  function stepBurst(dt){
+    anim.burstT += dt;
+    var t = anim.burstT;
+    var fadeC = Math.exp(-2.4*t);
+    var drag = Math.exp(-0.85*dt);
+    for (var i=0;i<anim.parts.length;i++){
+      var p = anim.parts[i];
+      p.vel[0] = (p.vel[0] + (anim.gL[0] + p.curve[0]*fadeC)*dt) * drag;
+      p.vel[1] = (p.vel[1] + (anim.gL[1] + p.curve[1]*fadeC)*dt) * drag;
+      p.vel[2] = (p.vel[2] + (anim.gL[2] + p.curve[2]*fadeC)*dt) * drag;
+      p.pos[0] += p.vel[0]*dt;
+      p.pos[1] += p.vel[1]*dt;
+      p.pos[2] += p.vel[2]*dt;
+      p.rot[0] += p.spin[0]*dt;
+      p.rot[1] += p.spin[1]*dt;
+      p.rot[2] += p.spin[2]*dt;
+      var op = t < 0.28 ? 1 : Math.max(0, 1 - (t-0.28)/0.58);
+      p.el.style.opacity = op.toFixed(3);
+      p.el.style.transform = faceXf(p, 1 - Math.min(0.22, t*0.2));
+    }
+
+    var f = anim.food;
+    if (!f.rest){
+      f.v += f.g*dt;
+      f.y += f.v*dt;
+      if (f.y > 0 && f.v > 0){
+        var hit = f.v;
+        f.y = 0;
+        f.v = -hit * 0.5;
+        f.sq = Math.min(0.15, 0.08 + hit/1400);
+        f.sqv = 0;
+        if (Math.abs(f.v) < 62){ f.v = 0; f.rest = true; }
+      }
+    }
+    f.x *= Math.exp(-3.2*dt);
+    f.rv += (-34*f.rot - 8*f.rv)*dt;
+    f.rot += f.rv*dt;
+    f.sqv += (-96*f.sq - 15*f.sqv)*dt;
+    f.sq += f.sqv*dt;
+    f.sc += (1 - f.sc) * Math.min(1, dt*7);
+    var opF = Math.min(1, Math.max(0, (t - 0.05) / 0.22));
+    var sx = f.sc * (1 + f.sq);
+    var sy = f.sc * (1 - f.sq);
+    food.style.opacity = opF.toFixed(3);
+    food.style.transform = 'translate3d('+f.x.toFixed(1)+'px,'+f.y.toFixed(1)+'px,0) rotate('+f.rot.toFixed(1)+'deg) scale('+sx.toFixed(3)+','+sy.toFixed(3)+')';
+
+    var ug = Math.min(1, t/0.55);
+    burstEl.style.opacity = Math.max(0, 0.75*(1-ug)).toFixed(3);
+    burstEl.style.transform = 'scale('+(0.22+ug*1.25).toFixed(3)+')';
+    for (var s=0;s<sparkNodes.length;s++){
+      var spk = sparkNodes[s];
+      spk.vy += 380*dt;
+      spk.x += spk.vx*dt;
+      spk.y += spk.vy*dt;
+      spk.vx *= Math.exp(-1.5*dt);
+      var life = t / spk.life;
+      spk.el.style.opacity = life >= 1 ? '0' : ((1-life)*(1-life)).toFixed(3);
+      spk.el.style.transform = 'translate('+spk.x.toFixed(1)+'px,'+spk.y.toFixed(1)+'px)';
+    }
+    setShadow(0, 0, Math.max(0, 1 - t*1.15));
+
+    if (t > 1.05) finishBurst();
+  }
+
+  function finishBurst(){
+    var f = anim.food;
+    var rot = f ? f.rot : 0;
+    food.style.opacity = '1';
+    food.style.transform = 'translate3d(0,0,0) rotate('+rot.toFixed(2)+'deg) scale(1,1)';
+    for (var i=0;i<faces.length;i++) faces[i].style.opacity = '0';
+    clearSparks();
+    setShadow(0, 0, 0.15);
+    anim = null;
+  }
+
+  function loop(now){
+    if (!anim) return;
+    try{
+      var dt = anim.last ? Math.min(0.034, (now - anim.last)/1000) : 0.016;
+      anim.last = now;
+      if (dt < 0.001) dt = 0.001;
+      anim.t += dt;
+      if (anim.reduce && anim.phase === 'spin'){
+        if (anim.t > 0.16) enterBurst();
+      } else if (anim.phase === 'spin') stepSpin(dt);
+      else if (anim.phase === 'settle') stepSettle(dt);
+      else if (anim.phase === 'burst') stepBurst(dt);
+      if (anim) anim.raf = requestAnimationFrame(loop);
+    } catch (err){
+      if (anim && anim.item){
+        food.textContent = anim.item[0];
+        food.classList.add('shown');
+        food.style.opacity = '1';
+        showCard(anim.item, anim.isVeg);
+      }
+      hint.textContent = 'Hop! Dotkni sa pre ďalší hod';
+      busy = false;
+      anim = null;
+    }
+  }
+
+  function launch(token, item, isVeg){
+    var s1 = Math.random()<0.5 ? -1 : 1;
+    var s2 = Math.random()<0.5 ? -1 : 1;
+    var s3 = Math.random()<0.5 ? -1 : 1;
+    var axisA = norm3(s1*(0.62+Math.random()*0.48), s2*(0.82+Math.random()*0.5), s3*(0.38+Math.random()*0.42));
+    var axisB = norm3(axisA[0]+s3*0.55, axisA[1]-s1*0.42, axisA[2]+s2*0.48);
+    anim = {
+      token: token,
+      phase: 'spin',
+      t: 0,
+      last: 0,
+      q: [1,0,0,0],
+      w: [0,0,0],
+      axisA: axisA,
+      axisB: axisB,
+      y: 0,
+      vy: reducedMotion() ? 0 : -185,
+      g: 400,
+      squash: 0,
+      kick: 0,
+      item: item,
+      isVeg: isVeg,
+      reduce: reducedMotion(),
+      raf: 0
+    };
+    anim.raf = requestAnimationFrame(loop);
+  }
+
   function resetCube(){
-    dice.style.transform = 'rotateX(0deg) rotateY(0deg)';
-    faces.forEach(function(f){ f.classList.remove('show'); f.classList.add('no'); });
+    if (anim){
+      cancelAnimationFrame(anim.raf);
+      anim = null;
+    }
+    clearSparks();
+    dice.style.transform = 'translate3d(0,0,0) rotateX(0deg) rotateY(0deg)';
+    faces.forEach(function(f){
+      f.classList.remove('show');
+      f.classList.add('no');
+      f.style.transform = '';
+      f.style.opacity = '';
+      f.style.visibility = '';
+      f.style.backfaceVisibility = '';
+    });
     food.classList.remove('shown');
+    food.style.opacity = '';
+    food.style.transform = '';
+    lightFaces([1,0,0,0]);
+    setShadow(0, 0, 1);
   }
 
   function roll(){
@@ -260,32 +779,18 @@
     busy = true;
     card.classList.add('hidden');
     hint.textContent = 'Točí sa…';
-
-    // 1) schovaj jedlo, priprav kocku
+    var token = ++rollToken;
     resetCube();
-    setTimeout(function(){
-      var shown=[];
-      for(var i=0;i<6;i++) shown.push(pick(arr)[0]);
-      faces.forEach(function(f,idx){ setFaceEmoji(idx,shown[idx]); });
-      // zloz kocku (odobrat skryte) a roztoc
-      faces.forEach(function(f){ f.classList.remove('no'); });
-      void dice.offsetWidth;
-      var sx = (Math.floor(Math.random()*3)+3)*360;
-      var sy = (Math.floor(Math.random()*3)+2)*360;
-      var tilt = (Math.random()*2-1)*14;
-      dice.style.transform = 'rotateX('+sx.toFixed(1)+'deg) rotateY('+sy.toFixed(1)+'deg) rotateZ('+tilt.toFixed(1)+'deg)';
-    }, 250);
 
-    setTimeout(function(){
-      // 3) rozpad + vyberie jedlo: tvar f5 predstavuje "hornu" tvar kocky
-      food.textContent = item[0];
-      faces.forEach(function(f){ f.classList.add('show'); });
-      void food.offsetWidth;
-      food.classList.add('shown');
-      showCard(item, arr===VEG);
-      hint.textContent = 'Hop! Dotkni sa pre ďalší hod';
-      busy = false; /* kocka je pripravena na dalsi hod hned, ako vyskovci jedlo */
-    }, 1500);
+    var shown=[];
+    for(var i=0;i<6;i++) shown.push(pick(arr)[0]);
+    faces.forEach(function(f, idx){
+      setFaceEmoji(idx, shown[idx]);
+      f.classList.remove('no');
+    });
+    void dice.offsetWidth;
+    if (token !== rollToken) return;
+    launch(token, item, arr===VEG);
   }
 
   function showCard(item, isVeg){
@@ -302,25 +807,30 @@
     });
   }
 
-  var t = document.getElementById('toggle');
-  t.addEventListener('pointerup', function(e){
+  var tgl = document.getElementById('toggle');
+  tgl.addEventListener('pointerup', function(e){
     var b = e.target.closest('button');
     if(!b) return;
     MODE = b.dataset.mode;
     applyToggle();
     card.classList.add('hidden');
     hint.textContent = 'Dotkni sa kocky 🎲';
+    var my = ++rollToken;
+    busy = false;
     resetCube();
     var arr=currentArr();
-    faces.forEach(function(f,idx){
-      setTimeout(function(){ f.classList.remove('no'); }, idx*40);
+    faces.forEach(function(f, idx){
       setFaceEmoji(idx, arr[idx%arr.length][0]);
+      setTimeout(function(){
+        if (my !== rollToken) return;
+        f.classList.remove('no');
+      }, idx*40);
     });
   });
-  t.addEventListener('pointerdown', function(e){ e.preventDefault(); });
-  t.addEventListener('touchstart', function(e){ e.preventDefault(); }, {passive:false});
+  tgl.addEventListener('pointerdown', function(e){ e.preventDefault(); });
+  tgl.addEventListener('touchstart', function(e){ e.preventDefault(); }, {passive:false});
 
-  stage.addEventListener('pointerup', function(e){
+  stage.addEventListener('pointerup', function(){
     roll();
   });
   stage.addEventListener('pointerdown', function(e){ e.preventDefault(); });
@@ -339,8 +849,8 @@
   };
 
   applyToggle();
+  lightFaces([1,0,0,0]);
 
-  // PWA - instalacia appky (mobile) a offline
   var deferredPrompt = null;
   var installBtn = document.getElementById('installBtn');
   window.addEventListener('beforeinstallprompt', function(e){
