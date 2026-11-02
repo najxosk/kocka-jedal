@@ -14,7 +14,8 @@ Mini web-app: **3D kocka, ktorá hodí nápad, čo jesť.** Po slovensky, na mob
 ## Ako spustiť
 - **Online:** otvor link vyššie v prehliadači (Chrome/Safari)
 - **Offline / lokálne:** otvor `index.html` v prehliadači
-- **Ako appka na mobile:** Chrome → ⋮ → *Pridať na plochu*
+- **Ako appka na mobile:** Chrome → ⋮ → *Pridať na plochu* — beží na celú obrazovku a aj offline (PWA). Na počítači je to normálna stránka.
+- Stránka sa sama prispôsobí: na mobile veľké dotykové tlačidlá a inštalácia do appky, na počítači bežné stránkovanie.
 
 ## Technológia
 - Jeden statický HTML súbor (`index.html`), žiadne závislosti, žiadny server
